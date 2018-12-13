@@ -10,6 +10,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import web3 from 'Embark/web3';
 import { MySnackbarContentWrapper } from './base/SnackBars';
 import { currencies, TOKEN_ICON_API, getTokenLabel } from '../utils/currencies'
+import {toTokenDecimals} from '../utils/conversions'
 
 const { donate } = LiquidPledgingMock.methods
 const hoursToSeconds = hours => hours * 60 * 60
@@ -24,11 +25,15 @@ const CreateFunding = ({ refreshTable }) => (
     onSubmit={async (values, { setSubmitting, resetForm, setStatus }) => {
       const { funderId, receiverId, tokenAddress, amount } = values
       const account = await web3.eth.getCoinbase()
-      const args = [funderId, receiverId, tokenAddress, web3.utils.toWei(amount, 'ether')];
-      
-      const toSend =  donate(...args);
 
-      const estimateGas = await toSend.estimateGas();
+      // TODO: determine if token is a HumanStandardToken that specifies an amount of decimals.
+      const tokenWei = toTokenDecimals(amount)
+
+      const args = [funderId, receiverId, tokenAddress, tokenWei]
+      
+      const toSend =  donate(...args)
+
+      const estimateGas = await toSend.estimateGas()
      
       toSend.send({ from: account, gas: estimateGas + 2000 })
         .then(res => {

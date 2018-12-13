@@ -9,7 +9,7 @@ import DialogContent from '@material-ui/core/DialogContent'
 import DialogContentText from '@material-ui/core/DialogContentText'
 import DialogTitle from '@material-ui/core/DialogTitle'
 import { getTokenLabel } from '../utils/currencies'
-import { toWei } from '../utils/conversions'
+import { toTokenDecimals } from '../utils/conversions'
 import { FundingContext } from '../context'
 
 const { transfer } = LiquidPledgingMock.methods
@@ -17,39 +17,43 @@ const { transfer } = LiquidPledgingMock.methods
 const TransferDialog = ({ row, handleClose, transferPledgeAmounts }) => (
   <Formik
     initialValues={{}}
-  onSubmit={async (values, { setSubmitting, resetForm, setStatus }) => {
-    const { id } = row
-    const { idSender, amount, idReceiver } = values
-    const args = [idSender, id, toWei(amount.toString()), idReceiver]
-    const toSend = transfer(...args);
-    const estimatedGas = await toSend.estimateGas();
+    onSubmit={async (values, { setSubmitting, resetForm, setStatus }) => {
+      const { id } = row
+      const { idSender, amount, idReceiver } = values
 
-    toSend.send({gas: estimatedGas + 1000})
-          .then(res => {
-            console.log({res})
-            const { events: { Transfer: { returnValues } } } = res
-            transferPledgeAmounts(returnValues)
-          })
-          .catch(e => {
-            console.log({e})
-          })
-          .finally(() => {
-            handleClose()
-            resetForm()
-          })
-  }}
+      // TODO: determine if token is a HumanStandardToken that specifies an amount of decimals.
+      const tokenWei = toTokenDecimals(amount)
+
+      const args = [idSender, id, tokenWei, idReceiver]
+      const toSend = transfer(...args)
+      const estimatedGas = await toSend.estimateGas()
+
+      toSend.send({gas: estimatedGas + 1000})
+        .then(res => {
+          console.log({res})
+          const { events: { Transfer: { returnValues } } } = res
+          transferPledgeAmounts(returnValues)
+        })
+        .catch(e => {
+          console.log({e})
+        })
+        .finally(() => {
+          handleClose()
+          resetForm()
+        })
+    }}
   >
     {({
-       values,
-       errors,
-       touched,
-       handleChange,
-       handleBlur,
-       handleSubmit,
-       submitForm,
-       setFieldValue,
-       setStatus,
-       status
+      values,
+      errors,
+      touched,
+      handleChange,
+      handleBlur,
+      handleSubmit,
+      submitForm,
+      setFieldValue,
+      setStatus,
+      status
     }) => (
       <form onSubmit={handleSubmit}>
         <Dialog

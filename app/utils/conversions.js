@@ -22,7 +22,7 @@ const padRight = (number, length) => {
   return str
 }
 
-export const fromTokenDecimals = (value, decimals) => {
+export const fromTokenDecimals = (value, decimals = 18) => {
   value = numberToBN(value)
   const pow = new BN(10, 10).pow(numberToBN(decimals))
   const int = value.div(pow)
@@ -30,7 +30,7 @@ export const fromTokenDecimals = (value, decimals) => {
   return int.toString(10) + (dec !== '' ? '.' + dec : '')
 }
 
-export const toTokenDecimals = (value, decimals) => {
+export const toTokenDecimals = (value, decimals = 18) => {
   value = value.toString().split('.')
   const pow = new BN(10, 10).pow(numberToBN(decimals))
   const int = numberToBN(value[0]).mul(pow)
